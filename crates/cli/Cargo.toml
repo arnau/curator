@@ -1,0 +1,22 @@
+[package]
+name = "curator"
+version = "0.0.0"
+authors = ["Arnau Siches <asiches@gmail.com>"]
+edition = "2018"
+description = "A CLI to curate a CSV-based knowledge base."
+
+
+[[bin]]
+name = "curator"
+path = "src/main.rs"
+
+[dependencies]
+chrono = { version = "0.4", features = ["serde"] }
+clap = "=3.0.0-beta.1"
+console = "0.11.2"
+csv = "1.1"
+curator_sketch = { path = "../sketch" }
+dialoguer = "0.6.2"
+lazy_static = "1.4"
+serde = { version = "1.0", features = ["derive"] }
+toml = "0.5.6"
