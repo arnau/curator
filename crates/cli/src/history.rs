@@ -53,7 +53,7 @@ impl Add {
 
         let path = manifest.history_path();
         let mut file = OpenOptions::new().append(true).open(path)?;
-        let date = Local::today();
+        let date = Utc::today().format("%F");
 
         let theme = ColorfulTheme::default();
 
@@ -104,8 +104,6 @@ impl Add {
         //     .default(1)
         //     .with_prompt("Type of the crate")
         //     .interact_on(&TERM_ERR)?;
-
-        dbg!(&self);
 
         let tags = self.tags.join(";");
         let title = self.title.clone().unwrap();
