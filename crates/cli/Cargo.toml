@@ -16,7 +16,7 @@ clap = "=3.0.0-beta.1"
 console = "0.11"
 csv = "1.1"
 curator_sketch = { path = "../sketch" }
-dialoguer = "0.6"
+dialoguer = "0.6.2"
 lazy_static = "1.4"
 serde = { version = "1.0", features = ["derive"] }
 toml = "0.5"

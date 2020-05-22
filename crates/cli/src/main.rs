@@ -9,12 +9,15 @@ use clap::{AppSettings, Clap};
 //use curator_sketch;
 mod error;
 mod history;
+mod ideas;
 mod manifest;
 
 #[derive(Debug, Clap)]
 enum Subcommand {
-    /// Manages the reading history.
+    /// Manages the history store.
     History(history::Cmd),
+    /// Manages the idea store.
+    Ideas(ideas::Cmd),
 }
 
 #[derive(Debug, Clap)]
@@ -40,11 +43,13 @@ struct Curator {
 fn main() -> Result<(), error::Error> {
     let opts: Curator = Curator::parse();
     let manifest = manifest::Manifest::new(&opts.manifest_path)?;
-    println!("{:?}", manifest);
 
     match opts.subcommand {
-        Subcommand::History(h) => match h.subcommand {
+        Subcommand::History(o) => match o.subcommand {
             history::Subcommand::Add(mut cmd) => cmd.run(manifest),
+        },
+        Subcommand::Ideas(o) => match o.subcommand {
+            ideas::Subcommand::Add(mut cmd) => cmd.run(manifest),
         },
     }
 

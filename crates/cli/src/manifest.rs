@@ -26,6 +26,10 @@ impl Manifest {
     pub fn history_path(&self) -> &str {
         &self.activity.history
     }
+
+    pub fn ideas_path(&self) -> &str {
+        &self.activity.ideas
+    }
 }
 
 #[derive(Debug, Deserialize)]
@@ -33,4 +37,5 @@ pub struct Activity {
     history: String,
     events: String,
     sources: String,
+    ideas: String,
 }
