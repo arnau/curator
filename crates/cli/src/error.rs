@@ -34,6 +34,12 @@ impl From<io::Error> for Error {
     }
 }
 
+impl From<csv::Error> for Error {
+    fn from(err: csv::Error) -> Error {
+        Error(format!("{}", err))
+    }
+}
+
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", self.0)

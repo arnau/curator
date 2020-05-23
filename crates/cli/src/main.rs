@@ -50,6 +50,7 @@ fn main() -> Result<(), error::Error> {
         },
         Subcommand::Ideas(o) => match o.subcommand {
             ideas::Subcommand::Add(mut cmd) => cmd.run(manifest),
+            ideas::Subcommand::List(cmd) => cmd.run(manifest),
         },
     }
 

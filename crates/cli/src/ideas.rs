@@ -4,10 +4,16 @@
 // This file may not be copied, modified, or distributed except
 // according to those terms.
 
-use crate::error::{Error, TERM_ERR};
+use crate::error::Error;
 use crate::manifest::Manifest;
+use chrono::prelude::*;
 use clap::Clap;
+use console::{Style, Term};
 use dialoguer::{theme::ColorfulTheme, Editor, Input, Select};
+use serde::{Deserialize, Serialize};
+use std::fs::File;
+use std::fs::OpenOptions;
+use std::io::prelude::*;
 use std::process::exit;
 
 #[derive(Debug, Clap)]
@@ -20,12 +26,15 @@ pub struct Cmd {
 pub enum Subcommand {
     /// Adds an idea to the idea store.
     Add(Add),
+    /// Lists all ideas in the store.
+    List(List),
 }
 
-#[derive(Debug)]
+#[derive(Debug, Deserialize, Serialize)]
 pub struct Idea {
+    date: String,
     content: String,
-    reminder: String,
+    reminder: Option<String>,
 }
 
 #[derive(Debug, Clap)]
@@ -33,10 +42,6 @@ pub struct Add;
 
 impl Add {
     pub fn run(&mut self, manifest: Manifest) -> Result<(), Error> {
-        use chrono::prelude::*;
-        use std::fs::OpenOptions;
-        use std::io::Write;
-
         let path = manifest.ideas_path();
         let mut file = OpenOptions::new().append(true).open(path)?;
         let date = Utc::today().format("%F");
@@ -90,6 +95,73 @@ impl Add {
         );
 
         file.write(row.as_bytes())?;
+
+        Ok(())
+    }
+}
+
+#[derive(Debug, Clap)]
+pub struct List;
+
+impl List {
+    pub fn run(&self, manifest: Manifest) -> Result<(), Error> {
+        let path = manifest.ideas_path();
+        let f = File::open(path)?;
+        let mut rdr = csv::Reader::from_reader(f);
+        // let date = Utc::today().format("%F");
+
+        // use std::time::Duration;
+        let term = Term::stdout();
+        let (_height, width) = term.size();
+
+        let hi_row = Style::new().on_black().on_bright();
+        let head = Style::new().on_black().white();
+
+        {
+            let headers = rdr.headers()?;
+            let header = format!(
+                "###  {:10}  {:10}  {}",
+                headers.get(0).unwrap(),
+                headers.get(2).unwrap(),
+                headers.get(1).unwrap(),
+            );
+            println!("{:80}", head.apply_to(header));
+        }
+
+        for (idx, result) in rdr.deserialize().enumerate() {
+            let record: Idea = result?;
+            let date = &record.date;
+            let summary = &record.content.lines().next().unwrap();
+            let reminder = record.reminder.clone().unwrap_or("".to_string());
+            let row = format!("{:3}  {:10}  {:10}  {}", idx, &date, &reminder, &summary);
+            let padding = width as usize - row.len();
+            let row_padded = format!("{}{}", row, " ".repeat(padding));
+
+            if idx % 2 == 0 {
+                println!("{}", hi_row.apply_to(row_padded));
+            } else {
+                println!("{}", row_padded);
+            }
+        }
+        Ok(())
+    }
+
+    fn run_csv(&self, manifest: Manifest) -> Result<(), Error> {
+        let path = manifest.ideas_path();
+        let f = File::open(path)?;
+        let mut rdr = csv::Reader::from_reader(f);
+        let mut wtr = csv::Writer::from_writer(Term::stdout());
+
+        for result in rdr.deserialize() {
+            let mut record: Idea = result?;
+
+            if self.summary {
+                record.content = record.content.lines().next().unwrap().to_string();
+            }
+
+            wtr.serialize(record)?;
+        }
+        wtr.flush()?;
 
         Ok(())
     }

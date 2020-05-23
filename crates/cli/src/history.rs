@@ -7,9 +7,7 @@
 use crate::error::{Error, TERM_ERR};
 use crate::manifest::Manifest;
 use clap::Clap;
-use dialoguer::{theme::ColorfulTheme, Input, Select};
-use std::process::exit;
-//use curator_sketch;
+use dialoguer::{theme::ColorfulTheme, Input};
 
 #[derive(Debug, Clap)]
 pub struct Cmd {
