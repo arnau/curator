@@ -13,7 +13,6 @@ use dialoguer::{theme::ColorfulTheme, Editor, Input, Select};
 use serde::{Deserialize, Serialize};
 use std::fs::File;
 use std::fs::OpenOptions;
-use std::io::prelude::*;
 use std::process::exit;
 
 #[derive(Debug, Clap)]
@@ -33,8 +32,8 @@ pub enum Subcommand {
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Idea {
     date: String,
-    content: String,
     reminder: Option<String>,
+    content: String,
 }
 
 #[derive(Debug, Clap)]
@@ -43,8 +42,9 @@ pub struct Add;
 impl Add {
     pub fn run(&mut self, manifest: Manifest) -> Result<(), Error> {
         let path = manifest.ideas_path();
-        let mut file = OpenOptions::new().append(true).open(path)?;
+        let file = OpenOptions::new().append(true).create(true).open(path)?;
         let date = Utc::today().format("%F");
+        let mut wtr = csv::Writer::from_writer(file);
 
         let theme = ColorfulTheme::default();
 
@@ -86,28 +86,60 @@ impl Add {
             }
         }
 
-        // date,content,reminder
-        let row = format!(
-            "{},\"{}\",{}\n",
-            date,
-            content.unwrap(),
-            reminder.unwrap_or("".to_string())
-        );
+        let record = Idea {
+            date: date.to_string(),
+            content: content.unwrap(),
+            reminder,
+        };
 
-        file.write(row.as_bytes())?;
+        wtr.serialize(record)?;
+        wtr.flush()?;
 
         Ok(())
     }
 }
 
+enum ListFormat {
+    Term,
+    Csv,
+}
+
 #[derive(Debug, Clap)]
-pub struct List;
+pub struct List {
+    #[clap(long, short = "f", default_value = "term", possible_values = &["term", "csv"])]
+    format: String,
+    #[clap(long, short = "s")]
+    summary: bool,
+}
 
 impl List {
     pub fn run(&self, manifest: Manifest) -> Result<(), Error> {
+        let format = match &self.format[..] {
+            "term" => ListFormat::Term,
+            "csv" => ListFormat::Csv,
+            _ => unreachable!(),
+        };
         let path = manifest.ideas_path();
-        let f = File::open(path)?;
-        let mut rdr = csv::Reader::from_reader(f);
+        let file = OpenOptions::new()
+            .write(true)
+            .read(true)
+            .create(true)
+            .open(path)?;
+        let metadata = file.metadata()?;
+
+        if metadata.len() == 0 {
+            println!("No ideas in the store");
+            return Ok(());
+        }
+
+        match format {
+            ListFormat::Term => self.run_term(file),
+            ListFormat::Csv => self.run_csv(file),
+        }
+    }
+
+    fn run_term(&self, file: File) -> Result<(), Error> {
+        let mut rdr = csv::Reader::from_reader(file);
         // let date = Utc::today().format("%F");
 
         // use std::time::Duration;
@@ -146,10 +178,8 @@ impl List {
         Ok(())
     }
 
-    fn run_csv(&self, manifest: Manifest) -> Result<(), Error> {
-        let path = manifest.ideas_path();
-        let f = File::open(path)?;
-        let mut rdr = csv::Reader::from_reader(f);
+    fn run_csv(&self, file: File) -> Result<(), Error> {
+        let mut rdr = csv::Reader::from_reader(file);
         let mut wtr = csv::Writer::from_writer(Term::stdout());
 
         for result in rdr.deserialize() {
