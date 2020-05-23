@@ -43,8 +43,12 @@ impl Add {
     pub fn run(&mut self, manifest: Manifest) -> Result<(), Error> {
         let path = manifest.ideas_path();
         let file = OpenOptions::new().append(true).create(true).open(path)?;
+        let metadata = file.metadata()?;
+        let empty_file = metadata.len() == 0;
         let date = Utc::today().format("%F");
-        let mut wtr = csv::Writer::from_writer(file);
+        let mut wtr = csv::WriterBuilder::new()
+            .has_headers(empty_file)
+            .from_writer(file);
 
         let theme = ColorfulTheme::default();
 
