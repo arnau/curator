@@ -35,7 +35,7 @@ pub struct Add {
     summary: Option<String>,
 
     /// The list of tags to classify the resource.
-    #[clap(long, short = "t")]
+    #[clap(long, short = 't')]
     tags: Vec<String>,
 
     /// The origin source where the resource was found.

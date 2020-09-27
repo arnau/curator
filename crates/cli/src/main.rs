@@ -26,7 +26,7 @@ struct Curator {
     /// Path to the cellar Cellar.toml manifest
     #[clap(
         long,
-        short = "p",
+        short = 'p',
         value_name = "path",
         default_value = "./Cellar.toml"
     )]

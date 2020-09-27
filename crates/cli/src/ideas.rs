@@ -110,9 +110,9 @@ enum ListFormat {
 
 #[derive(Debug, Clap)]
 pub struct List {
-    #[clap(long, short = "f", default_value = "term", possible_values = &["term", "csv"])]
+    #[clap(long, short = 'f', default_value = "term", possible_values = &["term", "csv"])]
     format: String,
-    #[clap(long, short = "s")]
+    #[clap(long, short = 's')]
     summary: bool,
 }
 
