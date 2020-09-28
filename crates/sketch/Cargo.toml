@@ -1,6 +1,6 @@
 [package]
 name = "curator_sketch"
-version = "0.0.0"
+version = "0.1.0"
 authors = ["Arnau Siches <asiches@gmail.com>"]
 edition = "2018"
 description = "A library to sketch ideas for Curator."
