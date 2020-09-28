@@ -5,6 +5,7 @@
 // according to those terms.
 
 use console::{Style, Term};
+use curator_sketch::{history::RecordError, source::SourceError};
 use lazy_static::lazy_static;
 use std::{error, fmt, io};
 
@@ -28,6 +29,12 @@ impl Error {
 
 impl error::Error for Error {}
 
+impl From<String> for Error {
+    fn from(err: String) -> Error {
+        Error(err)
+    }
+}
+
 impl From<io::Error> for Error {
     fn from(err: io::Error) -> Error {
         Error(format!("{}", err))
@@ -36,6 +43,30 @@ impl From<io::Error> for Error {
 
 impl From<csv::Error> for Error {
     fn from(err: csv::Error) -> Error {
+        Error(format!("{}", err))
+    }
+}
+
+impl From<toml::de::Error> for Error {
+    fn from(err: toml::de::Error) -> Error {
+        Error(format!("{}", err))
+    }
+}
+
+impl From<toml::ser::Error> for Error {
+    fn from(err: toml::ser::Error) -> Error {
+        Error(format!("{}", err))
+    }
+}
+
+impl From<RecordError> for Error {
+    fn from(err: RecordError) -> Error {
+        Error(format!("{}", err))
+    }
+}
+
+impl From<SourceError> for Error {
+    fn from(err: SourceError) -> Error {
         Error(format!("{}", err))
     }
 }

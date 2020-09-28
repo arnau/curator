@@ -15,6 +15,7 @@ mod manifest;
 #[derive(Debug, Clap)]
 enum Subcommand {
     /// Manages the history store.
+    #[clap(alias = "h")]
     History(history::Cmd),
     /// Manages the idea store.
     Ideas(ideas::Cmd),

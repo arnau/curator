@@ -4,10 +4,15 @@
 // This file may not be copied, modified, or distributed except
 // according to those terms.
 
-use crate::error::{Error, TERM_ERR};
+use crate::error::Error;
 use crate::manifest::Manifest;
 use clap::Clap;
-use dialoguer::{theme::ColorfulTheme, Input};
+use curator_sketch::history::{Record, RecordBuilder};
+use curator_sketch::source::{self, Source};
+use dialoguer::Editor;
+use skim::prelude::*;
+use std::fs;
+use std::io::Cursor;
 
 #[derive(Debug, Clap)]
 pub struct Cmd {
@@ -25,95 +30,48 @@ pub enum Subcommand {
 pub struct Add {
     /// The URL to store.
     url: String,
-
-    /// The title of the resource.
-    #[clap(long)]
-    title: Option<String>,
-
-    /// The short explanation of what is the resource about.
-    #[clap(long)]
-    summary: Option<String>,
-
-    /// The list of tags to classify the resource.
-    #[clap(long, short = 't')]
-    tags: Vec<String>,
-
-    /// The origin source where the resource was found.
-    #[clap(long)]
-    origin: Option<String>,
 }
 
 impl Add {
     pub fn run(&mut self, manifest: Manifest) -> Result<(), Error> {
-        use chrono::prelude::*;
-        use std::fs::OpenOptions;
-        use std::io::Write;
+        let source_rdr = fs::File::open(manifest.sources_path())?;
+        let sources: Vec<Source> = source::from_reader(source_rdr)?;
+        let record = prompt_record(&self.url, &sources)?;
 
-        let path = manifest.history_path();
-        let mut file = OpenOptions::new().append(true).open(path)?;
-        let date = Utc::today().format("%F");
-
-        let theme = ColorfulTheme::default();
-
-        if self.title.is_none() {
-            self.title = Some(
-                Input::with_theme(&theme)
-                    .with_prompt("Title")
-                    .interact_on(&TERM_ERR)?,
-            );
-        }
-
-        if self.summary.is_none() {
-            self.summary = Some(
-                Input::with_theme(&theme)
-                    .with_prompt("Summary")
-                    .interact_on(&TERM_ERR)?,
-            );
-        }
-
-        if self.tags.is_empty() {
-            let tags: String = Input::with_theme(&theme)
-                .with_prompt("Tags")
-                .interact_on(&TERM_ERR)?;
-
-            self.tags = tags
-                .split(',')
-                .map(|s| s.trim().to_string())
-                .collect::<Vec<String>>();
-        }
-
-        if self.origin.is_none() {
-            let origin: String = Input::with_theme(&theme)
-                .with_prompt("Origin")
-                .allow_empty(true)
-                .interact_on(&TERM_ERR)?;
-
-            self.origin = if origin.is_empty() {
-                None
-            } else {
-                Some(origin)
-            };
-        }
-
-        // let types = vec!["library", "binary"];
-
-        // let template = Select::with_theme(&theme)
-        //     .items(&types)
-        //     .default(1)
-        //     .with_prompt("Type of the crate")
-        //     .interact_on(&TERM_ERR)?;
-
-        let tags = self.tags.join(";");
-        let title = self.title.clone().unwrap();
-        let summary = self.summary.clone().unwrap();
-        let origin = self.origin.clone().unwrap_or("".to_string());
-        let row = format!(
-            "{},{},\"{}\",\"{}\",\"{}\",{}\n",
-            date, self.url, title, summary, tags, origin,
-        );
-
-        file.write(row.as_bytes())?;
+        record.append_into(manifest.history_path())?;
 
         Ok(())
     }
+}
+
+fn prompt_record(url: &str, sources: &[Source]) -> Result<Record, Error> {
+    let builder = Record::new(url);
+    let template = toml::to_string(&builder)?;
+    let record = if let Some(value) = Editor::new().extension(".toml").edit(&template)? {
+        let mut entry: RecordBuilder = toml::from_str(&value)?;
+
+        if entry.origin().is_none() {
+            let sources = sources
+                .iter()
+                .map(|src| src.id())
+                .collect::<Vec<_>>()
+                .join("\n");
+            let options = SkimOptionsBuilder::default().height(Some("50%")).build()?;
+            let item_reader = SkimItemReader::default();
+            let items = item_reader.of_bufread(Cursor::new(sources));
+            let selected_items = Skim::run_with(&options, Some(items))
+                .map(|out| out.selected_items)
+                .unwrap_or_else(|| Vec::new());
+
+            if let Some(item) = selected_items.first() {
+                entry.set_origin(item.output());
+            }
+        }
+
+        entry.build()?
+    } else {
+        return Err(Error::new("Aborted"));
+    };
+
+    Ok(record)
 }

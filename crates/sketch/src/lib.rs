@@ -1,11 +1,8 @@
-pub fn add_one(x: i32) -> i32 {
-    x + 1
-}
+// Copyright 2020 Arnau Siches
 
-#[cfg(test)]
-mod tests {
-    #[test]
-    fn it_works() {
-        assert_eq!(2 + 2, 4);
-    }
-}
+// Licensed under the MIT license <LICENCE or http://opensource.org/licenses/MIT>.
+// This file may not be copied, modified, or distributed except
+// according to those terms.
+
+pub mod history;
+pub mod source;
