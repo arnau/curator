@@ -64,7 +64,7 @@ fn prompt_record(url: &str, sources: &[Source]) -> Result<Record, Error> {
                 .unwrap_or_else(|| Vec::new());
 
             if let Some(item) = selected_items.first() {
-                entry.set_origin(item.output());
+                entry.with_origin(item.output());
             }
         }
 

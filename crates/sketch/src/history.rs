@@ -93,38 +93,34 @@ impl RecordBuilder {
         }
     }
 
-    pub fn with_date(mut self, date: NaiveDate) -> Self {
+    pub fn with_date(&mut self, date: NaiveDate) -> &Self {
         self.date = date.to_string();
         self
     }
 
-    pub fn with_title<S: Into<String>>(mut self, title: S) -> Self {
+    pub fn with_title<S: Into<String>>(&mut self, title: S) -> &Self {
         self.title = Some(title.into());
         self
     }
 
-    pub fn with_summary<S: Into<String>>(mut self, summary: S) -> Self {
+    pub fn with_summary<S: Into<String>>(&mut self, summary: S) -> &Self {
         self.summary = Some(summary.into());
         self
     }
 
-    pub fn with_tags(mut self, tags: &[&str]) -> Self {
+    pub fn with_tags(&mut self, tags: &[&str]) -> &Self {
         self.tags = tags.iter().map(|s| s.to_string()).collect();
         self
     }
 
-    pub fn with_tag<S: Into<String>>(mut self, tag: S) -> Self {
+    pub fn with_tag<S: Into<String>>(&mut self, tag: S) -> &Self {
         self.tags.push(tag.into());
         self
     }
 
-    pub fn with_origin<S: Into<String>>(mut self, origin: S) -> Self {
+    pub fn with_origin<S: Into<String>>(&mut self, origin: S) -> &Self {
         self.origin = Some(origin.into());
         self
-    }
-
-    pub fn set_origin<S: Into<String>>(&mut self, origin: S) {
-        self.origin = Some(origin.into());
     }
 
     pub fn url(&self) -> &str {
