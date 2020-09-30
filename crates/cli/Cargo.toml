@@ -1,6 +1,6 @@
 [package]
 name = "curator"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["Arnau Siches <asiches@gmail.com>"]
 edition = "2018"
 description = "A CLI to curate a CSV-based knowledge base."
