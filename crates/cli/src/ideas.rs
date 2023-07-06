@@ -7,7 +7,7 @@
 use crate::error::Error;
 use crate::manifest::Manifest;
 use chrono::prelude::*;
-use clap::Clap;
+use clap::Parser;
 use console::{Style, Term};
 use dialoguer::{theme::ColorfulTheme, Editor, Input, Select};
 use serde::{Deserialize, Serialize};
@@ -15,13 +15,13 @@ use std::fs::File;
 use std::fs::OpenOptions;
 use std::process::exit;
 
-#[derive(Debug, Clap)]
+#[derive(Debug, Parser)]
 pub struct Cmd {
     #[clap(subcommand)]
     pub subcommand: Subcommand,
 }
 
-#[derive(Debug, Clap)]
+#[derive(Debug, Parser)]
 pub enum Subcommand {
     /// Adds an idea to the idea store.
     Add(Add),
@@ -36,7 +36,7 @@ pub struct Idea {
     content: String,
 }
 
-#[derive(Debug, Clap)]
+#[derive(Debug, Parser)]
 pub struct Add;
 
 impl Add {
@@ -45,7 +45,7 @@ impl Add {
         let file = OpenOptions::new().append(true).create(true).open(path)?;
         let metadata = file.metadata()?;
         let empty_file = metadata.len() == 0;
-        let date = Utc::today().format("%F");
+        let date = Utc::now().format("%F");
         let mut wtr = csv::WriterBuilder::new()
             .has_headers(empty_file)
             .from_writer(file);
@@ -108,9 +108,9 @@ enum ListFormat {
     Csv,
 }
 
-#[derive(Debug, Clap)]
+#[derive(Debug, Parser)]
 pub struct List {
-    #[clap(long, short = 'f', default_value = "term", possible_values = &["term", "csv"])]
+    #[clap(long, short = 'f', default_value = "term", value_parser = ["term", "csv"])]
     format: String,
     #[clap(long, short = 's')]
     summary: bool,

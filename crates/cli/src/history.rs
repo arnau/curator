@@ -6,7 +6,7 @@
 
 use crate::error::Error;
 use crate::manifest::Manifest;
-use clap::Clap;
+use clap::Parser;
 use curator_sketch::history::{Record, RecordBuilder};
 use curator_sketch::source::{self, Source};
 use dialoguer::Editor;
@@ -14,19 +14,19 @@ use skim::prelude::*;
 use std::fs;
 use std::io::Cursor;
 
-#[derive(Debug, Clap)]
+#[derive(Debug, Parser)]
 pub struct Cmd {
     #[clap(subcommand)]
     pub subcommand: Subcommand,
 }
 
-#[derive(Debug, Clap)]
+#[derive(Debug, Parser)]
 pub enum Subcommand {
     /// Adds a resource to the history store.
     Add(Add),
 }
 
-#[derive(Debug, Clap)]
+#[derive(Debug, Parser)]
 pub struct Add {
     /// The URL to store.
     url: String,

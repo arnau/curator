@@ -4,7 +4,7 @@
 // This file may not be copied, modified, or distributed except
 // according to those terms.
 
-use clap::{AppSettings, Clap};
+use clap::Parser;
 
 //use curator_sketch;
 mod error;
@@ -12,7 +12,7 @@ mod history;
 mod ideas;
 mod manifest;
 
-#[derive(Debug, Clap)]
+#[derive(Debug, Parser)]
 enum Subcommand {
     /// Manages the history store.
     #[clap(alias = "h")]
@@ -21,8 +21,8 @@ enum Subcommand {
     Ideas(ideas::Cmd),
 }
 
-#[derive(Debug, Clap)]
-#[clap(name = "curator", version, global_setting(AppSettings::ColoredHelp))]
+#[derive(Debug, Parser)]
+#[clap(name = "curator", version)]
 struct Curator {
     /// Path to the cellar Cellar.toml manifest
     #[clap(
